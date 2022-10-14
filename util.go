@@ -37,7 +37,7 @@ func (s *Scraper) newRequest(method string, url string) (*http.Request, error) {
 	q.Add("include_ext_verified_type", "1")
 	q.Add("skip_status", "1")
 	q.Add("cards_platform", "Web-12")
-	q.Add("include_cards", "1")
+	q.Add("include_cards", strconv.Itoa(bool2int(s.includeCards)))
 	q.Add("include_ext_alt_text", "true")
 	q.Add("include_ext_limited_action_results", "false")
 	q.Add("include_quote_count", "true")
@@ -207,4 +207,11 @@ func urlParse(u string) *url.URL {
 		return nil
 	}
 	return parsed
+}
+
+func bool2int(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }

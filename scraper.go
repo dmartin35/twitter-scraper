@@ -22,6 +22,7 @@ type Scraper struct {
 	guestToken     string
 	guestCreatedAt time.Time
 	includeReplies bool
+	includeCards   bool
 	isLogged       bool
 	oAuthToken     string
 	oAuthSecret    string
@@ -146,4 +147,10 @@ func (s *Scraper) SetProxy(proxyAddr string) error {
 		return nil
 	}
 	return errors.New("only support http(s) or socks5 protocol")
+}
+
+// WithCard enable/disable parsing twitter cards in tweets
+func (s *Scraper) WithCards(b bool) *Scraper {
+	s.includeCards = b
+	return s
 }
