@@ -1,6 +1,7 @@
 package twitterscraper
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -55,6 +56,14 @@ type timeline struct {
 			QuotedStatusIDStr    string    `json:"quoted_status_id_str"`
 			Time                 time.Time `json:"time"`
 			UserIDStr            string    `json:"user_id_str"`
+			Card                 struct {
+				BindingValues map[string]struct {
+					StringValue string `json:"string_value"`
+					Type        string `json:"type"`
+				} `json:"binding_values"`
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"card"`
 		} `json:"tweets"`
 		Users map[string]struct {
 			CreatedAt   string `json:"created_at"`
@@ -165,6 +174,47 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 			UserID:       tweet.UserIDStr,
 			Username:     username,
 		}
+
+		//fmt.Println("we found a card", tweet.Card.BindingValues.UnifiedCard.StringValue)
+		//fmt.Println("we found a card", tweet.Card)
+
+		if tweet.Card.Name == "unified_card" {
+			fmt.Println("we can parse the json into unified card struct ")
+			if card, ok := tweet.Card.BindingValues[tweet.Card.Name]; ok {
+
+				fmt.Println("we found a card -> ", card)
+
+				var uc unifiedCard
+				if err := json.Unmarshal([]byte(card.StringValue), &uc); err != nil {
+
+					panic(err) // todo better handling
+
+				}
+
+				fmt.Println("we have now unified card struct loaded", uc)
+
+				id := strings.TrimPrefix(tweet.Card.URL, "card://")
+				c := &Card{
+					ID: id,
+				}
+				tw.Card = c
+
+				for _, media := range uc.MediaEntities {
+					if media.Type == "photo" {
+						tw.Photos = append(tw.Photos, media.MediaURLHttps)
+					}
+				}
+			}
+
+		}
+
+		/*
+			b, _ := json.Marshal(tweet.Card)
+			if len(b) > 0 {
+				fmt.Println("we found a card")
+				fmt.Println(string(b))
+			}
+		*/
 
 		tm, err := time.Parse(time.RubyDate, tweet.CreatedAt)
 		if err == nil {

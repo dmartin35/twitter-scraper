@@ -12,6 +12,7 @@ type (
 
 	// Tweet type.
 	Tweet struct {
+		Card             *Card
 		Hashtags         []string
 		HTML             string
 		ID               string
@@ -87,6 +88,13 @@ type (
 			Type        string        `json:"type"`
 			Coordinates [][][]float64 `json:"coordinates"`
 		} `json:"bounding_box"`
+	}
+
+	// Card type.
+	Card struct {
+		ID     string `json:"id"`
+		HTML   string
+		Photos []string
 	}
 
 	fetchProfileFunc func(query string, maxProfilesNbr int, cursor string) ([]*Profile, string, error)
