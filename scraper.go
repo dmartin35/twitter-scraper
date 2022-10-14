@@ -21,6 +21,7 @@ type Scraper struct {
 	guestToken     string
 	guestCreatedAt time.Time
 	includeReplies bool
+	includeCards   bool
 	searchMode     SearchMode
 	wg             sync.WaitGroup
 
@@ -166,6 +167,12 @@ func (s *Scraper) SetProxy(proxyAddr string) error {
 // Deprecated: SetProxy wrapper for default Scraper
 func SetProxy(proxy string) error {
 	return defaultScraper.SetProxy(proxy)
+}
+
+// WithCard enable/disable parsing twitter cards in tweets
+func (s *Scraper) WithCards(b bool) *Scraper {
+	s.includeCards = b
+	return s
 }
 
 func init() {

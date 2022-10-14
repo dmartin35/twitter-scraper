@@ -32,7 +32,7 @@ func (s *Scraper) newRequest(method string, url string) (*http.Request, error) {
 	q.Add("include_ext_has_nft_avatar", "1")
 	q.Add("skip_status", "1")
 	q.Add("cards_platform", "Web-12")
-	q.Add("include_cards", "1")
+	q.Add("include_cards", strconv.Itoa(bool2int(s.includeCards)))
 	q.Add("include_ext_alt_text", "true")
 	q.Add("include_quote_count", "true")
 	q.Add("include_reply_count", "1")
@@ -185,4 +185,11 @@ func stringInSlice(a string, list []string) bool {
 		}
 	}
 	return false
+}
+
+func bool2int(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }
