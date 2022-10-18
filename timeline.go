@@ -57,9 +57,10 @@ type timeline struct {
 			Time                 time.Time `json:"time"`
 			UserIDStr            string    `json:"user_id_str"`
 			Card                 struct {
-				BindingValues map[string]struct {
-					StringValue string `json:"string_value"`
-					Type        string `json:"type"`
+				BindingValues struct {
+					UnifiedCard struct {
+						StringValue string `json:"string_value"`
+					} `json:"unified_card"`
 				} `json:"binding_values"`
 				Name string `json:"name"`
 				URL  string `json:"url"`
@@ -175,46 +176,16 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 			Username:     username,
 		}
 
-		//fmt.Println("we found a card", tweet.Card.BindingValues.UnifiedCard.StringValue)
-		//fmt.Println("we found a card", tweet.Card)
-
 		if tweet.Card.Name == "unified_card" {
-			fmt.Println("we can parse the json into unified card struct ")
-			if card, ok := tweet.Card.BindingValues[tweet.Card.Name]; ok {
-
-				fmt.Println("we found a card -> ", card)
-
-				var uc unifiedCard
-				if err := json.Unmarshal([]byte(card.StringValue), &uc); err != nil {
-
-					panic(err) // todo better handling
-
-				}
-
-				fmt.Println("we have now unified card struct loaded", uc)
-
-				id := strings.TrimPrefix(tweet.Card.URL, "card://")
-				c := &Card{
-					ID: id,
+			var uc unifiedCard
+			if err := json.Unmarshal([]byte(tweet.Card.BindingValues.UnifiedCard.StringValue), &uc); err == nil {
+				c := uc.parseCard()
+				if c != nil {
+					c.ID = strings.TrimPrefix(tweet.Card.URL, "card://")
 				}
 				tw.Card = c
-
-				for _, media := range uc.MediaEntities {
-					if media.Type == "photo" {
-						tw.Photos = append(tw.Photos, media.MediaURLHttps)
-					}
-				}
 			}
-
 		}
-
-		/*
-			b, _ := json.Marshal(tweet.Card)
-			if len(b) > 0 {
-				fmt.Println("we found a card")
-				fmt.Println(string(b))
-			}
-		*/
 
 		tm, err := time.Parse(time.RubyDate, tweet.CreatedAt)
 		if err == nil {
@@ -276,12 +247,21 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 				tw.SensitiveContent = sensitive.AdultContent || sensitive.GraphicViolence || sensitive.Other
 			}
 		}
+		if tw.Card != nil {
+			tw.Photos = append(tw.Photos, tw.Card.Photos...)
+		}
 
 		for _, url := range tweet.Entities.URLs {
 			tw.URLs = append(tw.URLs, url.ExpandedURL)
 		}
+		if tw.Card != nil {
+			tw.URLs = append(tw.URLs, tw.Card.URLs...)
+		}
 
 		tw.HTML = tweet.FullText
+		if tw.Card != nil && tw.Card.HTML != "" {
+			tw.HTML += "<br>" + tw.Card.HTML
+		}
 		tw.HTML = reHashtag.ReplaceAllStringFunc(tw.HTML, func(hashtag string) string {
 			return fmt.Sprintf(`<a href="https://twitter.com/hashtag/%s">%s</a>`,
 				strings.TrimPrefix(hashtag, "#"),
@@ -309,6 +289,9 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 			}
 			return tco
 		})
+		if tw.Card != nil {
+			foundedMedia = append(foundedMedia, tw.Card.Photos...)
+		}
 		for _, url := range tw.Photos {
 			if stringInSlice(url, foundedMedia) {
 				continue
