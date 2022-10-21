@@ -167,3 +167,28 @@ func TestRetweet(t *testing.T) {
 		}
 	}
 }
+
+func TestTwitterCard(t *testing.T) {
+	//sample := &twitterscraper.Tweet{}
+	scraper := twitterscraper.New().WithCards(true)
+
+	//1583127236932210691 - unified card
+	//593828669740584960 - summary card
+	//1577690074862555143 - summary large image
+	//1579864407567261697 - summary large image
+	//1583186327243493376 - summary large image
+
+	tweet, err := scraper.GetTweet("1583127236932210691")
+	if err != nil {
+		t.Error(err)
+	} else {
+		if tweet.Card == nil {
+			t.Error("Twitter card must be set")
+		}
+		/*
+			if diff := cmp.Diff(sample, tweet, cmpOptions...); diff != "" {
+				t.Error("Resulting tweet does not match the sample", diff)
+			}
+		*/
+	}
+}
