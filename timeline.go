@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	twittercards "github.com/n0madic/twitter-scraper/cards"
+	twittercards "github.com/imatag/twitter-scraper/cards"
 )
 
 // timeline JSON object

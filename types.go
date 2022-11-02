@@ -3,7 +3,7 @@ package twitterscraper
 import (
 	"time"
 
-	twittercards "github.com/n0madic/twitter-scraper/cards"
+	twittercards "github.com/imatag/twitter-scraper/cards"
 )
 
 type (
