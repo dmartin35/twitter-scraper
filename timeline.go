@@ -251,9 +251,6 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 		}
 
 		tw.HTML = tweet.FullText
-		if tw.Card != nil && tw.Card.HTML != "" {
-			tw.HTML += "<br>" + tw.Card.HTML
-		}
 		tw.HTML = reHashtag.ReplaceAllStringFunc(tw.HTML, func(hashtag string) string {
 			return fmt.Sprintf(`<a href="https://twitter.com/hashtag/%s">%s</a>`,
 				strings.TrimPrefix(hashtag, "#"),
@@ -281,6 +278,9 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 			}
 			return tco
 		})
+		if tw.Card != nil && tw.Card.HTML != "" {
+			tw.HTML += "<br>" + tw.Card.HTML
+		}
 		if tw.Card != nil {
 			foundedMedia = append(foundedMedia, tw.Card.Photos...)
 		}
