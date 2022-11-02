@@ -213,3 +213,9 @@ scraper.WithDelay(5)
 ```golang
 scraper.WithReplies(true)
 ```
+
+### Parse tweets with embeded twitter cards
+
+```golang
+scraper.WithCards(true)
+```
