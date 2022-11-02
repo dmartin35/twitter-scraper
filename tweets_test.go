@@ -168,27 +168,28 @@ func TestRetweet(t *testing.T) {
 	}
 }
 
-func TestTwitterCard(t *testing.T) {
-	//sample := &twitterscraper.Tweet{}
+func TestTwitterCards(t *testing.T) {
+	var tests = []struct {
+		name     string
+		tweetdID string
+	}{
+		{name: "unified card", tweetdID: "1583127236932210691"},
+		{name: "summary card", tweetdID: "1487072722953854979"},
+		{name: "summary with large image card", tweetdID: "1577690074862555143"},
+	}
+
 	scraper := twitterscraper.New().WithCards(true)
 
-	//1583127236932210691 - unified card
-	//593828669740584960 - summary card
-	//1577690074862555143 - summary large image
-	//1579864407567261697 - summary large image
-	//1583186327243493376 - summary large image
-
-	tweet, err := scraper.GetTweet("1583127236932210691")
-	if err != nil {
-		t.Error(err)
-	} else {
-		if tweet.Card == nil {
-			t.Error("Twitter card must be set")
-		}
-		/*
-			if diff := cmp.Diff(sample, tweet, cmpOptions...); diff != "" {
-				t.Error("Resulting tweet does not match the sample", diff)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tweet, err := scraper.GetTweet(tt.tweetdID)
+			if err != nil {
+				t.Error(err)
+			} else {
+				if tweet.Card == nil {
+					t.Error("Twitter card must be set")
+				}
 			}
-		*/
+		})
 	}
 }

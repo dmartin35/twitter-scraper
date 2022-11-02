@@ -1,10 +1,13 @@
 package twitterscraper
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
+
+	twittercards "github.com/n0madic/twitter-scraper/cards"
 )
 
 // timeline JSON object
@@ -57,13 +60,9 @@ type timeline struct {
 			Time                 time.Time `json:"time"`
 			UserIDStr            string    `json:"user_id_str"`
 			Card                 struct {
-				BindingValues struct {
-					UnifiedCard struct {
-						StringValue string `json:"string_value"`
-					} `json:"unified_card"`
-				} `json:"binding_values"`
-				Name string `json:"name"`
-				URL  string `json:"url"`
+				BindingValues map[string]interface{} `json:"binding_values"`
+				Name          string                 `json:"name"`
+				URL           string                 `json:"url"`
 			} `json:"card"`
 		} `json:"tweets"`
 		Users map[string]struct {
@@ -176,15 +175,8 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 			Username:     username,
 		}
 
-		if tweet.Card.Name == "unified_card" {
-			var uc unifiedCard
-			if err := json.Unmarshal([]byte(tweet.Card.BindingValues.UnifiedCard.StringValue), &uc); err == nil {
-				c := uc.parseCard()
-				if c != nil {
-					c.ID = strings.TrimPrefix(tweet.Card.URL, "card://")
-				}
-				tw.Card = c
-			}
+		if parser := twittercards.GetTwitterCardParserByName(tweet.Card.Name); parser != nil {
+			tw.Card = parser.Parse(tweet.Card.BindingValues)
 		}
 
 		tm, err := time.Parse(time.RubyDate, tweet.CreatedAt)
@@ -355,4 +347,12 @@ func (timeline *timeline) parseUsers() ([]*Profile, string) {
 		}
 	}
 	return orderedProfiles, cursor
+}
+
+func JSONMarshal(i interface{}) ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(i)
+	return buffer.Bytes(), err
 }

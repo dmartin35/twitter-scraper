@@ -1,6 +1,10 @@
 package twitterscraper
 
-import "time"
+import (
+	"time"
+
+	twittercards "github.com/n0madic/twitter-scraper/cards"
+)
 
 type (
 	// Video type.
@@ -90,14 +94,8 @@ type (
 		} `json:"bounding_box"`
 	}
 
-	// Card type.
-	Card struct {
-		ID     string   `json:"id"`
-		Text   string   `json:"text"`
-		HTML   string   `json:"html"`
-		Photos []string `json:"photos"`
-		URLs   []string `json:"urls"`
-	}
+	// Card is an alias to subpackage type Card
+	Card = twittercards.Card
 
 	fetchProfileFunc func(query string, maxProfilesNbr int, cursor string) ([]*Profile, string, error)
 	fetchTweetFunc   func(query string, maxTweetsNbr int, cursor string) ([]*Tweet, string, error)
