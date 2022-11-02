@@ -1,9 +1,13 @@
 package twitterscraper
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
+
+	twittercards "github.com/n0madic/twitter-scraper/cards"
 )
 
 // timeline JSON object
@@ -55,6 +59,11 @@ type timeline struct {
 			QuotedStatusIDStr    string    `json:"quoted_status_id_str"`
 			Time                 time.Time `json:"time"`
 			UserIDStr            string    `json:"user_id_str"`
+			Card                 struct {
+				BindingValues map[string]interface{} `json:"binding_values"`
+				Name          string                 `json:"name"`
+				URL           string                 `json:"url"`
+			} `json:"card"`
 		} `json:"tweets"`
 		Users map[string]struct {
 			CreatedAt   string `json:"created_at"`
@@ -166,6 +175,10 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 			Username:     username,
 		}
 
+		if parser := twittercards.GetTwitterCardParserByName(tweet.Card.Name); parser != nil {
+			tw.Card = parser.Parse(tweet.Card.BindingValues)
+		}
+
 		tm, err := time.Parse(time.RubyDate, tweet.CreatedAt)
 		if err == nil {
 			tw.TimeParsed = tm
@@ -226,9 +239,15 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 				tw.SensitiveContent = sensitive.AdultContent || sensitive.GraphicViolence || sensitive.Other
 			}
 		}
+		if tw.Card != nil {
+			tw.Photos = append(tw.Photos, tw.Card.Photos...)
+		}
 
 		for _, url := range tweet.Entities.URLs {
 			tw.URLs = append(tw.URLs, url.ExpandedURL)
+		}
+		if tw.Card != nil {
+			tw.URLs = append(tw.URLs, tw.Card.URLs...)
 		}
 
 		tw.HTML = tweet.FullText
@@ -259,6 +278,12 @@ func (timeline *timeline) parseTweet(id string) *Tweet {
 			}
 			return tco
 		})
+		if tw.Card != nil && tw.Card.HTML != "" {
+			tw.HTML += "<br>" + tw.Card.HTML
+		}
+		if tw.Card != nil {
+			foundedMedia = append(foundedMedia, tw.Card.Photos...)
+		}
 		for _, url := range tw.Photos {
 			if stringInSlice(url, foundedMedia) {
 				continue
@@ -322,4 +347,12 @@ func (timeline *timeline) parseUsers() ([]*Profile, string) {
 		}
 	}
 	return orderedProfiles, cursor
+}
+
+func JSONMarshal(i interface{}) ([]byte, error) {
+	buffer := &bytes.Buffer{}
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(i)
+	return buffer.Bytes(), err
 }
