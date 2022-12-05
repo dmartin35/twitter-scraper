@@ -176,6 +176,7 @@ func TestTwitterCards(t *testing.T) {
 		{name: "unified card", tweetdID: "1583127236932210691"},
 		{name: "summary card", tweetdID: "1487072722953854979"},
 		{name: "summary with large image card", tweetdID: "1577690074862555143"},
+		{name: "summary with large image card without photo", tweetdID: "1569596741015556097"},
 	}
 
 	scraper := twitterscraper.New().WithCards(true)

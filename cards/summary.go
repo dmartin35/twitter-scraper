@@ -3,7 +3,6 @@ package cards
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 // SummaryCardParser implements TwitterCardParser interface
@@ -34,15 +33,14 @@ func (p *SummaryCardParser) Parse(bindingValues map[string]interface{}) (card *C
 		card.Text = fmt.Sprintf("%s\n%s\n%s\n", stringOr(vanity, domain), title, desc)
 		card.HTML = card.Text
 
-		card.URLs = append(card.URLs, cardUrl)
-		card.Photos = append(card.Photos, imgUrl)
-
-		if len(card.URLs) > 0 && len(card.Photos) > 0 {
-			card.HTML = fmt.Sprintf(
-				`<a href="%s"><img src="%s"><br>%s</a>`,
-				card.URLs[0], card.Photos[0], strings.Replace(card.Text, "\n", "<br>", -1))
+		if cardUrl != "" {
+			card.URLs = append(card.URLs, cardUrl)
+		}
+		if imgUrl != "" {
+			card.Photos = append(card.Photos, imgUrl)
 		}
 
+		card.buildHtml()
 		return card
 
 	}

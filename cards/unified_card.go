@@ -3,7 +3,6 @@ package cards
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 )
 
 // UnifiedCardParser implements TwitterCardParser interface
@@ -99,22 +98,21 @@ func (uc *unifiedCard) parseCard() *Card {
 	for _, dest := range uc.DestinationObjects {
 		switch dest.Type {
 		case "browser", "browser_with_docked_media":
-			c.URLs = append(c.URLs, dest.Data.UrlData.URL)
+			if dest.Data.UrlData.URL != "" {
+				c.URLs = append(c.URLs, dest.Data.UrlData.URL)
+			}
 		}
 	}
 
 	for _, media := range uc.MediaEntities {
 		switch media.Type {
 		case "photo", "video":
-			c.Photos = append(c.Photos, media.MediaURLHttps)
+			if media.MediaURLHttps != "" {
+				c.Photos = append(c.Photos, media.MediaURLHttps)
+			}
 		}
 	}
 
-	if len(c.URLs) > 0 && len(c.Photos) > 0 {
-		c.HTML = fmt.Sprintf(
-			`<a href="%s"><img src="%s"><br>%s</a>`,
-			c.URLs[0], c.Photos[0], strings.Replace(c.Text, "\n", "<br>", 1))
-	}
-
+	c.buildHtml()
 	return c
 }
